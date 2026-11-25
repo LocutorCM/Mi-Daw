@@ -13,6 +13,7 @@
   "build": {
     "appId": "com.tu.daw",
     "productName": "Mi DAW",
+    "files": ["*.js", "*.html", "*.css", "package.json"],
     "mac": { "target": "dmg" }
   }
 }
