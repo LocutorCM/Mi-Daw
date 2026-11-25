@@ -2,18 +2,7 @@
   "name": "mi-daw-mac",
   "version": "1.0.0",
   "main": "main.js",
-  "scripts": {
-    "start": "electron .",
-    "build": "electron-builder --mac dmg --x64 --arm64"
-  },
-  "devDependencies": {
-    "electron": "^30.0.0",
-    "electron-builder": "^24.13.3"
-  },
-  "build": {
-    "appId": "com.tu.daw",
-    "productName": "Mi DAW",
-    "files": ["*.js", "*.html", "*.css", "package.json"],
-    "mac": { "target": "dmg" }
-  }
+  "scripts": { "build": "electron-builder --mac dmg --x64 --arm64" },
+  "devDependencies": { "electron": "^30.0.0", "electron-builder": "^24.13.3" },
+  "build": { "appId": "com.tu.daw", "productName": "Mi DAW", "mac": { "target": "dmg" } }
 }
