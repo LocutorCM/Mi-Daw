@@ -1,5 +1,8 @@
 name: Build Mac
 on: [push]
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: macos-latest
@@ -9,5 +12,7 @@ jobs:
         with: { node-version: 20 }
       - run: npm install
       - run: npm run build
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - uses: actions/upload-artifact@v4
         with: { name: mac-app, path: dist/*.dmg }
