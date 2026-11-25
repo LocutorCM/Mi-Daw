@@ -1,15 +1,76 @@
 const { app, BrowserWindow } = require('electron');
-const path = require('path');
+
+const HTML = `<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Mi DAW</title>
+<style>
+html,body{margin:0;background:#1a1a1a;color:#fff;font-family:sans-serif}
+header{padding:12px;background:#222;display:flex;gap:10px;align-items:center}
+button{padding:12px 18px;border-radius:8px;border:0;cursor:pointer}
+.i-btn{background:#ff9500;color:#fff;font-weight:900}
+.i-btn.on{background:#ff3b30}
+main{display:flex}
+#rack{width:340px;background:#252525;padding:12px}
+.plugin{background:#333;padding:12px;margin-bottom:10px;border-radius:8px}
+input[type=range]{width:100%}
+</style></head>
+<body>
+<header><button id="play">Play</button><button id="rec">Rec</button><button id="monitor" class="i-btn">I - ESCUCHARME</button><b>Mi DAW - Vocal</b></header>
+<main>
+<aside id="rack">
+<div class="plugin"><b>1. EQ 8 BANDAS</b><div id="eq"></div></div>
+<div class="plugin"><b>2. COMPRESOR</b><br>
+Threshold <input type="range" id="th" min="-60" max="0" value="-20"><br>
+Ratio <input type="range" id="ratio" min="1" max="20" value="4"><br>
+Attack <input type="range" id="att" min="1" max="100" value="10"><br>
+Release <input type="range" id="rel" min="10" max="500" value="200">
+</div>
+</aside>
+<section style="padding:20px"><h2>Si ves esto, YA CARGO</h2><p>Picale a I y canta, ya debes escucharte con EQ y Compresor.</p></section>
+</main>
+<script>
+let ctx, source, monitorGain, eqFilters=[], comp;
+const freqs=[60,120,250,500,1000,2000,4000,8000];
+const eqEl=document.getElementById('eq');
+freqs.forEach((f,i)=>{
+  const d=document.createElement('div');
+  d.innerHTML=f+' Hz <input type="range" min="-12" max="12" value="0" data-i="'+i+'">';
+  eqEl.appendChild(d);
+});
+async function init(){
+  ctx=new (window.AudioContext||window.webkitAudioContext)();
+  const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+  source=ctx.createMediaStreamSource(stream);
+  let last=source;
+  freqs.forEach(f=>{
+    const fl=ctx.createBiquadFilter(); fl.type='peaking'; fl.frequency.value=f; fl.Q.value=1; fl.gain.value=0;
+    last.connect(fl); last=fl; eqFilters.push(fl);
+  });
+  comp=ctx.createDynamicsCompressor(); comp.threshold.value=-20; comp.ratio.value=4; comp.attack.value=0.01; comp.release.value=0.2;
+  last.connect(comp);
+  monitorGain=ctx.createGain(); monitorGain.gain.value=0;
+  comp.connect(monitorGain); monitorGain.connect(ctx.destination);
+}
+document.querySelectorAll('#eq input').forEach(inp=>{
+  inp.oninput=e=>{ if(eqFilters[e.target.dataset.i]) eqFilters[e.target.dataset.i].gain.value=e.target.value; };
+});
+document.getElementById('th').oninput=e=>{ if(comp) comp.threshold.value=e.target.value; };
+document.getElementById('ratio').oninput=e=>{ if(comp) comp.ratio.value=e.target.value; };
+document.getElementById('att').oninput=e=>{ if(comp) comp.attack.value=e.target.value/1000; };
+document.getElementById('rel').oninput=e=>{ if(comp) comp.release.value=e.target.value/1000; };
+document.getElementById('monitor').onclick=async e=>{
+  if(!ctx) await init(); await ctx.resume();
+  const on=e.target.classList.toggle('on');
+  monitorGain.gain.value=on?1:0;
+};
+</script>
+</body></html>`;
+
 function createWindow(){
   const win = new BrowserWindow({
     width: 1400, height: 900,
-    backgroundColor: '#ffffff',
-    show: true,
+    backgroundColor: '#1a1a1a',
     webPreferences: { nodeIntegration: true, contextIsolation: false }
   });
-  win.loadFile(path.join(__dirname, 'index.html'));
-  win.webContents.on('did-fail-load', () => {
-    win.loadURL('data:text/html,<h1>NO ENCONTRO index.html</h1>');
-  });
+  win.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(HTML));
 }
 app.whenReady().then(createWindow);
